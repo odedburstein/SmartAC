@@ -13,14 +13,18 @@ import face_recognition
 import picamera
 import numpy as np
 
+from multiprocessing import Queue
+from queue import Empty
+from time import sleep
+
 def person_finder(queue):
     # Get a reference to the Raspberry Pi camera.
     # If this fails, make sure you have a camera connected to the RPi and that you
     # enabled your camera in raspi-config and rebooted first.
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-
+    config.enable_stream(rs.stream.depth, 640, 360, rs.format.z16, 6)
+    config.enable_stream(rs.stream.color, 640, 360, rs.format.bgr8, 30)
     print("[INFO] Starting streaming...")
     pipeline.start(config)
     print("[INFO] Camera ready.")
@@ -35,14 +39,23 @@ def person_finder(queue):
     face_encodings = []
     face_names = ["oded"]
     should_work = False
+    msg = None
+    print("Person finder service finished calibrating")
     while True:
-        msg = queue.get()
+        try:
+            msg = queue.get_nowait()
+            # print(f"I got message: {msg}")
+        except Empty:
+            sleep(10)
+            continue
         if msg == "ON":
+            print("Starting person finder algorithm")
             should_work = True
         elif msg == "OFF":
+            print("Stopping person finder algorithm")
             should_work = False
         if should_work:
-            print("Capturing image.")
+            # print("Capturing image.")
             # Grab a single frame of video from the RPi camera as a numpy array
             frames = pipeline.wait_for_frames()
             color_frame = frames.get_color_frame()
@@ -51,7 +64,7 @@ def person_finder(queue):
 
             # Find all the faces and face encodings in the current frame of video
             face_locations = face_recognition.face_locations(color_image)
-            print("Found {} faces in image.".format(len(face_locations)))
+            # print("Found {} faces in image.".format(len(face_locations)))
             face_encodings = face_recognition.face_encodings(color_image, face_locations)
 
             # Loop over each face found in the frame to see if it's someone we know.
@@ -63,15 +76,17 @@ def person_finder(queue):
                 if match[0]:
                     name = "Oded"
 
-                print("I see someone named {}!".format(name))
+                print(f"I see someone named {name}!")
+                top, right, bottom, left = face_locations
+                print(f"His coords in the image is left={left} top={top} right={right} bottom={bottom}")
 
-            for (top, right, bottom, left) in face_locations:
-
-                # Draw a box around the face
-                cv2.rectangle(color_image, (left, top), (right, bottom), (0, 0, 255), 2)
-
-                # Draw a label with a name below the face
-                cv2.rectangle(color_image, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-
-                # Display the resulting image
-            cv2.imshow('Video', color_image)
+            # for (top, right, bottom, left) in face_locations:
+            #
+            #     # Draw a box around the face
+            #     cv2.rectangle(color_image, (left, top), (right, bottom), (0, 0, 255), 2)
+            #
+            #     # Draw a label with a name below the face
+            #     cv2.rectangle(color_image, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            #
+            #     # Display the resulting image
+            # cv2.imshow('Video', color_image)

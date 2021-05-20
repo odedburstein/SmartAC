@@ -1,6 +1,8 @@
 import bluetooth
 from bluetooth import BluetoothSocket as socket
+from multiprocessing import Process, Queue
 
+# BT config
 server_sock = socket(bluetooth.RFCOMM)
 port = bluetooth.PORT_ANY
 server_sock.bind(("", port))

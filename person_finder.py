@@ -93,7 +93,11 @@ def person_finder(queue):
                         x_coord, y_coord = ((left + right) / 2, (top + bottom) / 2)
                         z_coord = depth_frame.get_distance(int(x_coord), int(y_coord))
                         print(f'oded\'s face center is at {(x_coord, y_coord, z_coord)} [(px, px, m)]]')
-                        sock.send(chr(get_angle(x_coord=x_coord, y_coord=y_coord, z_coord=z_coord)).encode())
+                        angle = get_angle(x_coord=x_coord, y_coord=y_coord, z_coord=z_coord)
+                        angle_str = str(angle)
+                        angle_str_len = str(len(angle_str))
+                        sock.send(angle_str_len.encode())
+                        sock.send(angle_str.encode())
 
             sleep(1.5)
 

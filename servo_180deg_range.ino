@@ -24,7 +24,7 @@ int input_index = 0;
 char input[8] = "\0";
 
 void setup() {
-  servo_180.attach(servo_180_pin, 771, 2740);
+  servo_180.attach(servo_180_pin, 500, 2500);
   delay(1000);
   Serial.begin(9600);     
   btSerial.begin(9600);     // bluetooth module baudrate

@@ -1,8 +1,8 @@
-import pyrealsense2.pyrealsense2 as rs
-import face_recognition
-import numpy as np
 import bluetooth
-import random
+import face_recognition
+import math
+import numpy as np
+import pyrealsense2.pyrealsense2 as rs
 
 from bluetooth import BluetoothSocket as socket
 from queue import Empty
@@ -16,8 +16,19 @@ sock = socket(bluetooth.RFCOMM)
 port = 1
 sock.connect((hc_05_bt_addr,port))
 
+# user photo config
 user_photo_path = "naveh_small.jpeg"
 user_name = user_photo_path.split("_")[0]
+
+# person finder config
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
+SEG_PARAMETER = 10
+FRAME_SEGMENT = FRAME_WIDTH/SEG_PARAMETER
+ANGLE_RANGE = 120
+ANGLE_PER_SEGMENT = ANGLE_RANGE/SEG_PARAMETER
+
+PERSON_FINDER_DELAY = 1.5
 
 def person_finder(queue):
     # Get a reference to the Raspberry Pi camera.
@@ -25,8 +36,8 @@ def person_finder(queue):
     # enabled your camera in raspi-config and rebooted first.
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 424, 240, rs.format.z16, 6)
-    config.enable_stream(rs.stream.color, 424, 240, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.depth, FRAME_WIDTH, FRAME_HEIGHT, rs.format.z16, 6)
+    config.enable_stream(rs.stream.color, FRAME_WIDTH, FRAME_HEIGHT, rs.format.bgr8, 30)
     print(f"Segmented Person Finder: Starting streaming")
     pipeline.start(config)
     print(f"Segmented Person Finder: Camera ready")
@@ -96,25 +107,19 @@ def person_finder(queue):
                         z_coord = depth_frame.get_distance(int(x_coord), int(y_coord))
                         print(f'{user_name}\'s face center is at {(x_coord, y_coord, z_coord)} [(px, px, m)]]')
                         angle = get_angle(x_coord=x_coord, y_coord=y_coord, z_coord=z_coord)
-                        angle_str = str(angle)
-                        angle_str_len = str(len(angle_str))
-                        sock.send(angle_str_len.encode())
-                        sock.send(angle_str.encode())
+                        send_angle_to_hc05(angle)
 
-            sleep(1.5)
-
-            # for (top, right, bottom, left) in face_locations:
-            #
-            #     # Draw a box around the face
-            #     cv2.rectangle(color_image, (left, top), (right, bottom), (0, 0, 255), 2)
-            #
-            #     # Draw a label with a name below the face
-            #     cv2.rectangle(color_image, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-            #
-            #     # Display the resulting image
-            # cv2.imshow('Video', color_image)
+            sleep(PERSON_FINDER_DELAY)
 
 
+def send_angle_to_hc05(angle: float):
+    angle_str = str(angle)
+    angle_str_len = str(len(angle_str))
+    sock.send(angle_str_len.encode())
+    sock.send(angle_str.encode())
+    
 def get_angle(x_coord, y_coord, z_coord):
     # TODO implement
-    return int(random.uniform(0, 180.0))
+    user_segment = math.ceil(x_coord/FRAME_SEGMENT)
+    desired_angle = ANGLE_PER_SEGMENT*user_segment
+    return desired_angle

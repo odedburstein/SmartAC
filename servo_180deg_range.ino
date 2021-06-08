@@ -13,7 +13,7 @@ int hc05_rx = D4;
 int hc05_tx = D3;
 
 int angle = 0;
-int rotation_velocity = 0;
+int rotation_velocity = 15;
  
 SoftwareSerial btSerial(hc05_rx, hc05_tx); // Rx,Tx
 

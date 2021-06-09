@@ -1,17 +1,21 @@
-# This is a demo of running face recognition on a Raspberry Pi.
-# This program will print out the names of anyone it recognizes to the console.
-
-# To run this, you need a Raspberry Pi 2 (or greater) with face_recognition and
-# the picamera[array] module installed.
-# You can follow this installation instructions to get your RPi set up:
-# https://gist.github.com/ageitgey/1ac8dbe8572f3f533df6269dab35df65
-
 import pyrealsense2.pyrealsense2 as rs
-import numpy as np
-import cv2
 import face_recognition
-import picamera
 import numpy as np
+import bluetooth
+import random
+
+from bluetooth import BluetoothSocket as socket
+from queue import Empty
+from time import sleep
+
+
+# HC05 config
+hc_05_bt_addr = "00:15:83:35:7F:5D"
+# BT config
+sock = socket(bluetooth.RFCOMM)
+port = 1
+sock.connect((hc_05_bt_addr,port))
+
 
 def person_finder(queue):
     # Get a reference to the Raspberry Pi camera.
@@ -19,14 +23,14 @@ def person_finder(queue):
     # enabled your camera in raspi-config and rebooted first.
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-
-    print("[INFO] Starting streaming...")
+    config.enable_stream(rs.stream.depth, 424, 240, rs.format.z16, 6)
+    config.enable_stream(rs.stream.color, 424, 240, rs.format.bgr8, 30)
+    print(f"{__file__} Starting streaming...")
     pipeline.start(config)
-    print("[INFO] Camera ready.")
+    print(f"{__file__} Camera ready.")
 
     # Load a sample picture and learn how to recognize it.
-    print("Loading known face image(s)")
+    print(f"{__file__} Loading known face image(s)")
     oded_image = face_recognition.load_image_file("oded_small.jpg")
     oded_face_encoding = face_recognition.face_encodings(oded_image)[0]
 
@@ -35,43 +39,80 @@ def person_finder(queue):
     face_encodings = []
     face_names = ["oded"]
     should_work = False
+    msg = None
+    print(f"{__file__} Person finder service finished calibrating")
+
+    align_to = rs.stream.color
+    align = rs.align(align_to)
+
     while True:
-        msg = queue.get()
-        if msg == "ON":
-            should_work = True
-        elif msg == "OFF":
-            should_work = False
-        if should_work:
-            print("Capturing image.")
-            # Grab a single frame of video from the RPi camera as a numpy array
-            frames = pipeline.wait_for_frames()
-            color_frame = frames.get_color_frame()
+        # print("I'm not dead, another loop iteration")
+        try:
+            msg = queue.get_nowait()
+            print(f"{__file__} I got message: {msg}")
+            if msg == "ON":
+                print(f"{__file__} Starting person finder algorithm")
+                should_work = True
+            elif msg == "OFF":
+                print(f"{__file__} Stopping person finder algorithm")
+                should_work = False
+            sleep(1.5)
+        except Empty:
+            if should_work:
+                print(f"{__file__} Capturing image.")
+                # Grab a single frame of video from the RPi camera as a numpy array
+                frames = pipeline.wait_for_frames()
 
-            color_image = np.asanyarray(color_frame.get_data())
+                aligned_frames = align.process(frames)
+                aligned_depth_frame = aligned_frames.get_depth_frame()
+                color_frame = aligned_frames.get_color_frame()
 
-            # Find all the faces and face encodings in the current frame of video
-            face_locations = face_recognition.face_locations(color_image)
-            print("Found {} faces in image.".format(len(face_locations)))
-            face_encodings = face_recognition.face_encodings(color_image, face_locations)
+                if not aligned_depth_frame or not color_frame:
+                    print('invalid frames')
+                    continue
 
-            # Loop over each face found in the frame to see if it's someone we know.
-            for face_encoding in face_encodings:
-                # See if the face is a match for the known face(s)
-                match = face_recognition.compare_faces([oded_face_encoding], face_encoding)
-                name = "<Unknown Person>"
+                depth_frame = aligned_depth_frame
+                color_image = np.asanyarray(color_frame.get_data())
 
-                if match[0]:
-                    name = "Oded"
+                # Find all the faces and face encodings in the current frame of video
+                face_locations = face_recognition.face_locations(color_image)
+                print(f"{__file__} Found {len(face_locations)} faces in image")
+                face_encodings = face_recognition.face_encodings(color_image, face_locations)
 
-                print("I see someone named {}!".format(name))
+                # Loop over each face found in the frame to see if it's someone we know.
+                for i, face_encoding in enumerate(face_encodings):
+                    # See if the face is a match for the known face(s)
+                    match = face_recognition.compare_faces([oded_face_encoding], face_encoding)
+                    name = "<Unknown Person>"
 
-            for (top, right, bottom, left) in face_locations:
+                    if match[0]:
+                        name = "Oded"
+                        top, right, bottom, left = face_locations[i]
+                        print(f"{__file__} I see {name}!")
+                        print(f"{__file__} Oded's coords in the image is left={left} top={top} right={right} bottom={bottom}")
+                        x_coord, y_coord = ((left + right) / 2, (top + bottom) / 2)
+                        z_coord = depth_frame.get_distance(int(x_coord), int(y_coord))
+                        print(f'oded\'s face center is at {(x_coord, y_coord, z_coord)} [(px, px, m)]]')
+                        angle = get_angle(x_coord=x_coord, y_coord=y_coord, z_coord=z_coord)
+                        angle_str = str(angle)
+                        angle_str_len = str(len(angle_str))
+                        sock.send(angle_str_len.encode())
+                        sock.send(angle_str.encode())
 
-                # Draw a box around the face
-                cv2.rectangle(color_image, (left, top), (right, bottom), (0, 0, 255), 2)
+            sleep(1.5)
 
-                # Draw a label with a name below the face
-                cv2.rectangle(color_image, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            # for (top, right, bottom, left) in face_locations:
+            #
+            #     # Draw a box around the face
+            #     cv2.rectangle(color_image, (left, top), (right, bottom), (0, 0, 255), 2)
+            #
+            #     # Draw a label with a name below the face
+            #     cv2.rectangle(color_image, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            #
+            #     # Display the resulting image
+            # cv2.imshow('Video', color_image)
 
-                # Display the resulting image
-            cv2.imshow('Video', color_image)
+
+def get_angle(x_coord, y_coord, z_coord):
+    # TODO implement
+    return int(random.uniform(0, 180.0))

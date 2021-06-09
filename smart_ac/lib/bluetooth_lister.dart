@@ -29,7 +29,7 @@ class _BluetoothListerState extends State<BluetoothLister> {
       });
     });
 
-    _subscription.onDone(() {
+    _subscription?.onDone(() {
       setState(() {
         _finished = true;
       });

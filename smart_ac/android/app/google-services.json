@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "35189564918",
+    "project_id": "smart-ac-e68d3",
+    "storage_bucket": "smart-ac-e68d3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:35189564918:android:bf5479cec4ead7ea44d3d7",
+        "android_client_info": {
+          "package_name": "com.technion.smart_ac"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "35189564918-rp99vvorob2n8ngir1kgoip3744jh1co.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC88I0rTlSgOA1SDhece1e7dZrlHnDkLWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "35189564918-rp99vvorob2n8ngir1kgoip3744jh1co.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

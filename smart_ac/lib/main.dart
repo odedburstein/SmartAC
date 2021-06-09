@@ -2,14 +2,42 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:smart_ac/bluetooth_lister.dart';
+import 'package:smart_ac/settings.dart';
 
 void main() {
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(App());
 }
+
+class App extends StatelessWidget {
+  final _initializeApp = Firebase.initializeApp();
+
+  App({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initializeApp,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MyApp();
+        }
+
+        return MaterialApp(
+          theme: ThemeData(primarySwatch: Colors.teal),
+          home: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
+}
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -18,6 +46,7 @@ class MyApp extends StatelessWidget {
       title: 'Smart A/C',
       theme: ThemeData(
         primarySwatch: Colors.teal,
+        textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme)
       ),
       home: MyHomePage(),
     );
@@ -33,17 +62,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _messageController;
+  bool _loading;
 
   @override
   void initState() {
     super.initState();
     _messageController = TextEditingController();
+    _loading = false;
   }
 
   @override
   void dispose() {
     super.dispose();
-    _messageController.dispose();
+    _messageController?.dispose();
   }
 
   @override
@@ -58,12 +89,24 @@ class _MyHomePageState extends State<MyHomePage> {
         )),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(icon: Icon(Icons.settings), onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => SettingsScreen()));
+          }),
+        ],
       ),
       body: FutureBuilder<BluetoothConnection>(
         future: _connectToRaspberryPi(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             final connection = snapshot.data;
+            final textFieldBorder = OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white));
+
+            if (_loading) {
+              return CircularProgressIndicator(backgroundColor: Colors.white);
+            }
 
             return Center(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -81,7 +124,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: theme.primaryColorDark,
                       size: 100,
                     ),
-                    onPressed: () {}
+                    onPressed: () async {
+                      setState(() {
+                        _loading = true;
+                      });
+
+                      await _connectToRaspberryPi();
+                      // await _showBluetoothList();
+
+                      setState(() {
+                        _loading = false;
+                      });
+                    }
                 ),
                 Container(height: 26,),
                 Container(
@@ -89,10 +143,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     controller: _messageController,
                     style: TextStyle(color: Colors.white),
+                    cursorColor: Colors.white,
                     decoration: InputDecoration(
-                      focusedBorder: OutlineInputBorder(),
-                      enabledBorder: OutlineInputBorder(),
-                      border: OutlineInputBorder(),
+                      focusedBorder: textFieldBorder,
+                      enabledBorder: textFieldBorder,
+                      border: textFieldBorder,
                     ),
                   ),
                 ),
@@ -144,8 +199,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return await connection.output.allSent;
   }
 
-  void _showBluetoothList() {
-    showModalBottomSheet(
+  Future<void> _showBluetoothList() {
+    return showModalBottomSheet(
       isScrollControlled: true,
       context: context,
       shape: RoundedRectangleBorder(

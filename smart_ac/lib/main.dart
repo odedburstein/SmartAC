@@ -7,8 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smart_ac/bluetooth_lister.dart';
-import 'package:smart_ac/settings.dart';
+import 'package:smart_ac/screens/bluetooth_lister.dart';
+import 'package:smart_ac/screens/settings.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +30,7 @@ class App extends StatelessWidget {
         }
 
         return MaterialApp(
-          theme: ThemeData(primarySwatch: Colors.teal),
+          theme: ThemeData(primarySwatch: Colors.indigo),
           home: Center(child: CircularProgressIndicator()),
         );
       },
@@ -38,14 +38,17 @@ class App extends StatelessWidget {
   }
 }
 
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Smart A/C',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primarySwatch: Colors.indigo,
+        brightness: Brightness.light,
+        appBarTheme: Theme.of(context)
+            .appBarTheme
+            .copyWith(brightness: Brightness.dark),
         textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme)
       ),
       home: MyHomePage(),
@@ -90,10 +93,18 @@ class _MyHomePageState extends State<MyHomePage> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          IconButton(icon: Icon(Icons.settings), onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => SettingsScreen()));
-          }),
+          Material(
+            color: Colors.transparent,
+            shape: CircleBorder(),
+            clipBehavior: Clip.hardEdge,
+            child: IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => SettingsScreen()));
+              }
+            ),
+          ),
         ],
       ),
       body: FutureBuilder<BluetoothConnection>(

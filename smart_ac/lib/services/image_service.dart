@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class ImageService {
   FirebaseStorage _firebaseStorage;
@@ -13,9 +14,16 @@ class ImageService {
   factory ImageService.getInstance() => _imageService;
 
   Future uploadImage(File image) async {
+    final dir = await path_provider.getTemporaryDirectory();
+    final targetPath = '${dir.absolute.path}/$_imagePath';
+
+    final compressedImage = await FlutterImageCompress.compressAndGetFile(
+      image.absolute.path, targetPath, minHeight: 240, minWidth: 320
+    );
+
     final taskSnapshot = await _firebaseStorage.ref()
         .child(_imagePath)
-        .putFile(image)
+        .putFile(compressedImage)
         .whenComplete(() {});
     return taskSnapshot.ref.getDownloadURL();
   }

@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_ac/components/distance_slider.dart';
 import 'package:smart_ac/components/user_thumbnail.dart';
+import 'package:smart_ac/enums/bluetooth_status.dart';
+import 'package:smart_ac/repositories/bluetooth_repository.dart';
 import 'package:smart_ac/services/image_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -66,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontSize: 16,
         )),
         Container(height: 15),
-        DistanceSlider(onChanged: (_) {}),
+        DistanceSlider(),
       ])),
     );
   }
@@ -90,5 +93,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _image = null;
       _imageUrl = imageUrl;
     });
+
+    final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
+    if (bluetoothRepository.status == BluetoothStatus.connected) {
+      bluetoothRepository.sendRefreshUserPicture();
+    }
   }
 }

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_ac/repositories/bluetooth_repository.dart';
 import 'package:smart_ac/services/configurations_service.dart';
 
 class DistanceSlider extends StatelessWidget {
-  final ValueChanged<int> onChanged;
-
-  const DistanceSlider({
-    @required this.onChanged,
-    Key key,
-  }) : super(key: key);
+  const DistanceSlider({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,18 +15,16 @@ class DistanceSlider extends StatelessWidget {
           return Center(child: CircularProgressIndicator());
         }
 
-        return _DistanceSliderView(onChanged: onChanged, value: snapshot.data);
+        return _DistanceSliderView(value: snapshot.data);
       },
     );
   }
 }
 
 class _DistanceSliderView extends StatefulWidget {
-  final ValueChanged<int> onChanged;
   final int value;
 
   const _DistanceSliderView({
-    @required this.onChanged,
     @required this.value,
     Key key
   }) : super(key: key);
@@ -54,17 +49,18 @@ class _DistanceSliderViewState extends State<_DistanceSliderView> {
       min: -150,
       max: 150,
       divisions: 20,
-      label: value < 100 && value > -100 ? '$value cm' : '${value / 100} m',
+      label: value == 0 ? '0' : value < 100 && value > -100
+          ? (value.round() == value ? '${value.toInt()} cm' : '$value cm')
+          : '${value / 100} m',
       onChanged: (value) {
-        final roundValue = value.round();
         setState(() {
           this.value = value;
         });
-
-        widget.onChanged(roundValue);
       },
-      onChangeEnd: (value) {
-        ConfigurationsService.instance().setFanDistance(value.round());
+      onChangeEnd: (value) async {
+        await ConfigurationsService.instance().setFanDistance(value.round());
+        final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
+        bluetoothRepository.sendRefreshPosition();
       },
     );
   }

@@ -4,14 +4,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-class ImageService {
+class StorageService {
   FirebaseStorage _firebaseStorage;
   static final _imagePath = 'user.jpg';
-  static final ImageService _imageService = ImageService._();
+  static final _distancePath = 'distance.txt';
+  static final StorageService _instance = StorageService._();
 
-  ImageService._(): _firebaseStorage = FirebaseStorage.instance;
+  StorageService._(): _firebaseStorage = FirebaseStorage.instance;
 
-  factory ImageService.getInstance() => _imageService;
+  factory StorageService.getInstance() => _instance;
 
   Future uploadImage(File image) async {
     final dir = await path_provider.getTemporaryDirectory();
@@ -40,5 +41,16 @@ class ImageService {
     }
 
     return url;
+  }
+
+  Future<void> updateDistance(int distance) async {
+    final dir = await path_provider.getTemporaryDirectory();
+    final file = File('${dir.absolute.path}/$_distancePath');
+    await file.writeAsString('$distance');
+
+    await _firebaseStorage.ref()
+        .child(_distancePath)
+        .putFile(file)
+        .whenComplete(() {});
   }
 }

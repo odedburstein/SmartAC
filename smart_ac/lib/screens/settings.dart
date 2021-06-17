@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_ac/components/debug_mode_switch.dart';
 import 'package:smart_ac/components/distance_slider.dart';
 import 'package:smart_ac/components/user_thumbnail.dart';
 import 'package:smart_ac/enums/bluetooth_status.dart';
@@ -70,6 +71,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         )),
         Container(height: 15),
         DistanceSlider(),
+        Container(height: 30),
+        Text('Developer settings', style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+          fontSize: 20,
+        )),
+        Container(height: 8),
+        DebugModeSwitch(),
       ])),
     );
   }

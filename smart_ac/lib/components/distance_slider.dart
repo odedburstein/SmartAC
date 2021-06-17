@@ -14,7 +14,7 @@ class DistanceSlider extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return Center(child: Container(
-            padding: EdgeInsets.only(top: 21),
+            padding: EdgeInsets.only(top: 21, bottom: 21),
             margin: EdgeInsets.symmetric(horizontal: 22),
             child: ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(5)),

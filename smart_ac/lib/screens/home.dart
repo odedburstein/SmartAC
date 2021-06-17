@@ -41,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final theme = Theme.of(context);
     final textFieldBorder = OutlineInputBorder(
         borderSide: BorderSide(color: Colors.white));
+    final bluetoothRepository = Provider.of<BluetoothRepository>(context);
 
     return Scaffold(
       backgroundColor: theme.primaryColor,
@@ -109,32 +110,34 @@ class _MyHomePageState extends State<MyHomePage> {
               _loading = false;
             });
           }),
-          Container(height: 26,),
-          Container(
-            constraints: BoxConstraints(maxWidth: 200),
-            child: TextField(
-              controller: _messageController,
-              style: TextStyle(color: Colors.white),
-              cursorColor: Colors.white,
-              decoration: InputDecoration(
-                focusedBorder: textFieldBorder,
-                enabledBorder: textFieldBorder,
-                border: textFieldBorder,
+          if (bluetoothRepository.isDebugMode) ... [
+            Container(height: 26,),
+            Container(
+              constraints: BoxConstraints(maxWidth: 200),
+              child: TextField(
+                controller: _messageController,
+                style: TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
+                decoration: InputDecoration(
+                  focusedBorder: textFieldBorder,
+                  enabledBorder: textFieldBorder,
+                  border: textFieldBorder,
+                ),
               ),
             ),
-          ),
-          Container(height: 16,),
-          TextButton(
-            child: Text('Send'),
-            style: TextButton.styleFrom(backgroundColor: Colors.white),
-            onPressed: () async {
-              final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
-              if (bluetoothRepository.status == BluetoothStatus.connected) {
-                await _sendMessage(bluetoothRepository.connection, _messageController.text);
-                _messageController.text = '';
-              }
-            },
-          )
+            Container(height: 16,),
+            TextButton(
+              child: Text('Send'),
+              style: TextButton.styleFrom(backgroundColor: Colors.white),
+              onPressed: () async {
+                final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
+                if (bluetoothRepository.status == BluetoothStatus.connected) {
+                  await _sendMessage(bluetoothRepository.connection, _messageController.text);
+                  _messageController.text = '';
+                }
+              },
+            ),
+          ],
         ]),
       ),
     );

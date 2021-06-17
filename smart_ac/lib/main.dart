@@ -12,16 +12,31 @@ void main() {
 
 class App extends StatelessWidget {
   final _initializeApp = Firebase.initializeApp();
+  final _fetchDebugMode = BluetoothRepository.instance().fetchDebugMode();
 
   App({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _initializeApp,
+      future: Future.wait([_initializeApp, _fetchDebugMode]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          return MyApp();
+          return ChangeNotifierProvider(
+            create: (_) => BluetoothRepository.instance(),
+            child: MaterialApp(
+              title: 'Smart A/C',
+              theme: ThemeData(
+                  primarySwatch: Colors.indigo,
+                  brightness: Brightness.light,
+                  appBarTheme: Theme.of(context)
+                      .appBarTheme
+                      .copyWith(brightness: Brightness.dark),
+                  textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme)
+              ),
+              home: MyHomePage(),
+            ),
+          );
         }
 
         return MaterialApp(
@@ -33,23 +48,3 @@ class App extends StatelessWidget {
   }
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => BluetoothRepository.instance(),
-      child: MaterialApp(
-        title: 'Smart A/C',
-        theme: ThemeData(
-          primarySwatch: Colors.indigo,
-          brightness: Brightness.light,
-          appBarTheme: Theme.of(context)
-              .appBarTheme
-              .copyWith(brightness: Brightness.dark),
-          textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme)
-        ),
-        home: MyHomePage(),
-      ),
-    );
-  }
-}

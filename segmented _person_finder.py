@@ -71,13 +71,6 @@ def person_finder(queue):
     smart_plug.set_version(3.3)
     print(f"Segmented Person Finder: Smart plug ready")
 
-    # #firebase initialization
-    # print(f"Segmented Person Finder: Initializing firebase client")
-    # firestore_client = firestore.Client()
-    # firestore_document = firestore_client.collection("configurations").document("fan")
-    # set_smart_ac_position(firestore_document)
-    # print(f"Segmented Person Finder: Firebase clients ready")
-
     # Load a sample picture and learn how to recognize it.
     print(f"Segmented Person Finder: Loading user image")
     user_face_encoding = get_user_face_encoding()
@@ -213,7 +206,6 @@ def translate(value, leftMin=0, leftMax=3, rightMin=5, rightMax=30):
 
 
 def get_angle(x_coord, y_coord, z_coord):
-    # TODO implement
     z__cord = min(z_coord,1)
     global FRAME_WIDTH
     global SMART_AC_POSITION
@@ -235,11 +227,6 @@ def get_angle(x_coord, y_coord, z_coord):
     if desired_angle > ANGLE_RANGE-2*ANGLE_PER_SEGMENT:
         desired_angle = math.ceil(ANGLE_RANGE-2*ANGLE_PER_SEGMENT)
     return desired_angle
-
-# def set_smart_ac_position(firestore_document):
-#     global SMART_AC_POSITION
-#     distance = firestore_document.get().to_dict().get('distance')
-#     SMART_AC_POSITION = distance
 
 def get_is_smart_ac_active(smart_plug):
     is_active = smart_plug.status().get('dps').get('1')

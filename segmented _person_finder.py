@@ -58,7 +58,7 @@ def person_finder(queue):
     ABSENCE_TIMER = 0
     FAR_TIMER = 0
 
-    print(f"Segmented Person Finder: InSLEEitializing intel realsense camera")
+    print(f"Segmented Person Finder: Initializing intel realsense camera")
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
@@ -80,7 +80,7 @@ def person_finder(queue):
     face_locations = []
     face_encodings = []
     face_names = [user_name]
-    should_work = True
+    should_work = False
     msg = None
     print(f"Segmented Person Finder: Person finder service finished calibrating")
 
@@ -95,9 +95,13 @@ def person_finder(queue):
             if msg == "ON":
                 print(f"Segmented Person Finder: Starting person finder algorithm")
                 should_work = True
+                user_face_encoding = get_user_face_encoding()
+                set_smart_ac_position()
             elif msg == "OFF":
                 print(f"Segmented Person Finder: Stopping person finder algorithm")
                 should_work = False
+                smart_plug.turn_off(switch=1)
+                sleep(SMART_AC_TURN_OFF_DELAY)
             elif msg == "REFRESH_FACE":
                 print(f"Segmented Person Finder: Changing user face encoding")
                 user_face_encoding = get_user_face_encoding()
@@ -217,18 +221,22 @@ def get_angle(x_coord, y_coord, z_coord):
     user_segment = math.ceil(x_coord / FRAME_SEGMENT)
 
     if SMART_AC_POSITION >= 0:
-        ANGLE_RANGE = translate(SMART_AC_POSITION,0,150,180,90)
+        min_angle = 30
+        ANGLE_RANGE = translate(SMART_AC_POSITION,0,150,150,90)
+        ANGLE_PER_SEGMENT = ANGLE_RANGE / SEG_PARAMETER
+        desired_angle = math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
+        final_angel = max(min_angle, desired_angle)
+        print(f"angel is {final_angel}")
+        return final_angel
     else:
-        ANGLE_RANGE = translate(SMART_AC_POSITION, -150, 0, 90, 180)
-
-    ANGLE_PER_SEGMENT = ANGLE_RANGE / SEG_PARAMETER
-
-    desired_angle = math.ceil(ANGLE_RANGE-(ANGLE_PER_SEGMENT * user_segment))
-    if desired_angle < 2*ANGLE_PER_SEGMENT:
-        desired_angle = math.ceil(2*ANGLE_PER_SEGMENT)
-    if desired_angle > ANGLE_RANGE-2*ANGLE_PER_SEGMENT:
-        desired_angle = math.ceil(ANGLE_RANGE-2*ANGLE_PER_SEGMENT)
-    return desired_angle
+        max_angle = 150
+        ANGLE_RANGE = translate(SMART_AC_POSITION, -150, 0, 90, 150)
+        ANGLE_PER_SEGMENT = ANGLE_RANGE / SEG_PARAMETER
+        desired_angle = 90 + math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
+        print(f"desired angel is {desired_angle}")
+        final_angel = min(max_angle, desired_angle)
+        print(f"final angel is {final_angel}")
+        return final_angel
 
 def get_is_smart_ac_active(smart_plug):
     is_active = smart_plug.status().get('dps').get('1')

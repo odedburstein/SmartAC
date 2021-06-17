@@ -49,16 +49,16 @@ SMART_AC_POSITION = 150
 PERSON_FINDER_DELAY = 1.5
 SMART_AC_TURN_OFF_DELAY = 5
 SMART_AC_TURN_ON_DELAY = 1
-MAX_ABSENCE_ALLOWED = 1000 * 60 * 5
+MAX_ABSENCE_ALLOWED = 60 * 5
 
 def person_finder(queue):
 
-    user_present = False
+    user_present = True
     is_user_close=True
     ABSENCE_TIMER = 0
     FAR_TIMER = 0
 
-    print(f"Segmented Person Finder: Initializing intel realsense camera")
+    print(f"Segmented Person Finder: InSLEEitializing intel realsense camera")
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
@@ -80,7 +80,7 @@ def person_finder(queue):
     face_locations = []
     face_encodings = []
     face_names = [user_name]
-    should_work = False
+    should_work = True
     msg = None
     print(f"Segmented Person Finder: Person finder service finished calibrating")
 
@@ -145,7 +145,7 @@ def person_finder(queue):
                             total_far_time = time() - FAR_TIMER
                             if total_far_time > MAX_ABSENCE_ALLOWED:
                                 smart_plug.turn_off(switch=1)
-                                print("Segmented Person Finder: The user  is far for more than 5 minutes! Shutting down Smart AC")
+                                print("Segmented Person Finder: The user  is far for more than 6 minutes! Shutting down Smart AC")
                                 sleep(SMART_AC_TURN_OFF_DELAY)
 
                     else: # z_coord < 3.5 m
@@ -160,7 +160,9 @@ def person_finder(queue):
                         user_present = False
                         ABSENCE_TIMER = time()
                     else:
+                        print(f"absence timer is {ABSENCE_TIMER}")
                         total_absence_time = time()-ABSENCE_TIMER
+                        print(f"total_absence_time is {total_absence_time}")
                         if total_absence_time > MAX_ABSENCE_ALLOWED:
                             smart_plug.turn_off(switch=1)
                             print("Segmented Person Finder: The user is not present for more than 5 minutes! Shutting down Smart AC")

@@ -28,6 +28,10 @@ device_ip = '192.168.0.117'
 user_photo_path = "user_small.jpg"
 user_name = user_photo_path.split("_")[0]
 
+# distance path
+user_distance_download_path = "user_distance.txt"
+
+
 #  Firebase config
 cred_path = 'smart-ac-e68d3-firebase-adminsdk-5kqb5-b93d49fd08.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cred_path
@@ -76,8 +80,7 @@ def person_finder(queue):
 
     # Load a sample picture and learn how to recognize it.
     print(f"Segmented Person Finder: Loading user image")
-    user_image = face_recognition.load_image_file(user_photo_path)
-    user_face_encoding = face_recognition.face_encodings(user_image)[0]
+    user_face_encoding = get_user_face_encoding()
 
 
     # Initialize some variables
@@ -104,11 +107,10 @@ def person_finder(queue):
                 should_work = False
             elif msg == "REFRESH_FACE":
                 print(f"Segmented Person Finder: Changing user face encoding")
-                user_image = face_recognition.load_image_file(user_photo_path)
-                user_face_encoding = face_recognition.face_encodings(user_image)[0]
+                user_face_encoding = get_user_face_encoding()
             elif msg == "REFRESH_POSITION":
                 print(f"Segmented Person Finder: Updating Smart AC position")
-                # set_smart_ac_position(firestore_document)
+                set_smart_ac_position()
             sleep(1.5)
         except Empty:
             if should_work:
@@ -242,3 +244,14 @@ def get_angle(x_coord, y_coord, z_coord):
 def get_is_smart_ac_active(smart_plug):
     is_active = smart_plug.status().get('dps').get('1')
     return is_active
+
+def get_user_face_encoding():
+    user_image = face_recognition.load_image_file(user_photo_path)
+    user_face_encoding = face_recognition.face_encodings(user_image)[0]
+    return user_face_encoding
+
+def set_smart_ac_position():
+    global SMART_AC_POSITION
+    with open(user_distance_download_path, mode='r') as distance_file:
+        distance = distance_file.read()
+    SMART_AC_POSITION = int(distance)

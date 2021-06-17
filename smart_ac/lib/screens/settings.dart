@@ -7,7 +7,7 @@ import 'package:smart_ac/components/distance_slider.dart';
 import 'package:smart_ac/components/user_thumbnail.dart';
 import 'package:smart_ac/enums/bluetooth_status.dart';
 import 'package:smart_ac/repositories/bluetooth_repository.dart';
-import 'package:smart_ac/services/image_service.dart';
+import 'package:smart_ac/services/storage_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key key}) : super(key: key);
@@ -20,7 +20,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   File _image;
   String _imageUrl;
   final ImagePicker picker = ImagePicker();
-  final ImageService _imageService = ImageService.getInstance();
+  final StorageService _imageService = StorageService.getInstance();
 
   @override
   Widget build(BuildContext context) {

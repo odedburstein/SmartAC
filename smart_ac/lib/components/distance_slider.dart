@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_ac/repositories/bluetooth_repository.dart';
 import 'package:smart_ac/services/configurations_service.dart';
+import 'package:smart_ac/services/storage_service.dart';
 
 class DistanceSlider extends StatelessWidget {
   const DistanceSlider({Key key}) : super(key: key);
@@ -12,7 +13,14 @@ class DistanceSlider extends StatelessWidget {
       future: ConfigurationsService.instance().getFanDistance(),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return Center(child: CircularProgressIndicator());
+          return Center(child: Container(
+            padding: EdgeInsets.only(top: 21),
+            margin: EdgeInsets.symmetric(horizontal: 22),
+            child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(5)),
+                child: LinearProgressIndicator(minHeight: 6)
+            ),
+          ));
         }
 
         return _DistanceSliderView(value: snapshot.data);
@@ -48,17 +56,23 @@ class _DistanceSliderViewState extends State<_DistanceSliderView> {
       value: value,
       min: -150,
       max: 150,
-      divisions: 20,
-      label: value == 0 ? '0' : value < 100 && value > -100
-          ? (value.round() == value ? '${value.toInt()} cm' : '$value cm')
-          : '${value / 100} m',
+      divisions: 60,
+      label: () {
+        final shortValue = double.parse(value.toStringAsFixed(2));
+        return shortValue == 0 ? '0' : shortValue < 100 && shortValue > -100
+            ? (shortValue.round() == shortValue
+                ? '${shortValue.toInt()} cm'
+                : '$shortValue cm')
+            : '${shortValue / 100} m';
+      }(),
       onChanged: (value) {
         setState(() {
           this.value = value;
         });
       },
       onChangeEnd: (value) async {
-        await ConfigurationsService.instance().setFanDistance(value.round());
+        // await ConfigurationsService.instance().setFanDistance(value.round());
+        await StorageService.getInstance().updateDistance(value.round());
         final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
         bluetoothRepository.sendRefreshPosition();
       },

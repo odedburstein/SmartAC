@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smart_ac/services/image_service.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:smart_ac/services/storage_service.dart';
 
 class UserThumbnail extends StatelessWidget {
   final String url;
@@ -15,7 +16,7 @@ class UserThumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     if (url == null) {
       return FutureBuilder(
-        future: ImageService.getInstance().getImageURL(),
+        future: StorageService.getInstance().getImageURL(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return thumbnail(url: snapshot.data);
@@ -31,18 +32,21 @@ class UserThumbnail extends StatelessWidget {
 
   Widget thumbnail({ String url, bool loading = false }) {
     final radius = 100.0;
-    if (loading) {
-      return Container(
+    final loaderWidget = Shimmer.fromColors(
+      baseColor: Colors.grey[400],
+      highlightColor: Colors.white70,
+      child: Container(
         height: radius * 2,
         width: radius * 2,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.blueGrey[200],
+          color: Colors.black,
         ),
-        child: Center(
-            child: CircularProgressIndicator()
-        ),
-      );
+      ),
+    );
+
+    if (loading) {
+      return loaderWidget;
     }
 
     if (url == null || url == '') {
@@ -56,10 +60,13 @@ class UserThumbnail extends StatelessWidget {
       );
     }
 
-    return CircleAvatar(
-      radius: radius,
-      backgroundImage: NetworkImage(url),
-      backgroundColor: Colors.transparent,
-    );
+    return Stack(children: [
+      loaderWidget,
+      CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(url),
+        backgroundColor: Colors.transparent,
+      ),
+    ]);
   }
 }

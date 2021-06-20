@@ -71,7 +71,7 @@ class _DistanceSliderViewState extends State<_DistanceSliderView> {
         });
       },
       onChangeEnd: (value) async {
-        // await ConfigurationsService.instance().setFanDistance(value.round());
+        await ConfigurationsService.instance().setFanDistance(value.round());
         await StorageService.getInstance().updateDistance(value.round());
         final bluetoothRepository = Provider.of<BluetoothRepository>(context, listen: false);
         bluetoothRepository.sendRefreshPosition();

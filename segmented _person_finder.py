@@ -21,8 +21,8 @@ sock.connect((hc_05_bt_addr,port))
 
 # Smart life config
 device_id = 'bfc0abb82b329ea855fskr'
-local_key = 'e6bbfb0a598346ec'
-device_ip = '192.168.0.117'
+local_key = 'e2584f10dc471386'
+
 
 # user photo config
 user_photo_path = "user_small.jpg"
@@ -51,6 +51,9 @@ SMART_AC_TURN_OFF_DELAY = 5
 SMART_AC_TURN_ON_DELAY = 1
 MAX_ABSENCE_ALLOWED = 60 * 5
 
+
+
+
 def person_finder(queue):
 
     user_present = True
@@ -67,6 +70,7 @@ def person_finder(queue):
     print(f"Segmented Person Finder: Camera ready")
 
     print(f"Segmented Person Finder: Initializing smart plug client")
+    device_ip = os.environ["SMART_PLUG_IP"]
     smart_plug = tinytuya.OutletDevice(device_id, device_ip, local_key)
     smart_plug.set_version(3.3)
     print(f"Segmented Person Finder: Smart plug ready")
@@ -224,7 +228,8 @@ def get_angle(x_coord, y_coord, z_coord):
         min_angle = 30
         ANGLE_RANGE = translate(SMART_AC_POSITION,0,150,150,90)
         ANGLE_PER_SEGMENT = ANGLE_RANGE / SEG_PARAMETER
-        desired_angle = math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
+        angel_compliment = translate(SMART_AC_POSITION, 0, 150, 0, -90)
+        desired_angle = angel_compliment + math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
         final_angel = max(min_angle, desired_angle)
         print(f"angel is {final_angel}")
         return final_angel
@@ -232,7 +237,8 @@ def get_angle(x_coord, y_coord, z_coord):
         max_angle = 150
         ANGLE_RANGE = translate(SMART_AC_POSITION, -150, 0, 90, 150)
         ANGLE_PER_SEGMENT = ANGLE_RANGE / SEG_PARAMETER
-        desired_angle = 90 + math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
+        angel_compliment = translate(SMART_AC_POSITION, -150, 0, 90, 0)
+        desired_angle = angel_compliment + math.ceil(ANGLE_RANGE - (ANGLE_PER_SEGMENT * user_segment))
         print(f"desired angel is {desired_angle}")
         final_angel = min(max_angle, desired_angle)
         print(f"final angel is {final_angel}")

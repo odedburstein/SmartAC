@@ -57,6 +57,11 @@ def download_file_from_firebase(file_path_in_firebase, download_path):
     except Exception as e:
         print(f"Smart AC orchestrator: Failed to access firebase. The error was {e}")
 
+def get_device_ip():
+    devices = tinytuya.deviceScan()
+    for ip, attributes in devices.items():
+        if attributes['gwId'] == device_id:
+            return ip
 
 if __name__ == '__main__':
     print(f"Smart AC orchestrator: Starting orchestrator process")
@@ -69,6 +74,8 @@ if __name__ == '__main__':
     firebase_download_distance_response = download_file_from_firebase(path_to_user_distance, user_distance_download_path)
     print(f"Smart AC orchestrator: Sucessfully downloaded user distance from firebase")
 
+
+    os.environ["SMART_PLUG_IP"] = get_device_ip()
     person_finder_process.start()
 
     print(f"Smart AC orchestrator: Starting person finder process")

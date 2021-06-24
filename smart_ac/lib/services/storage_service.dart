@@ -19,7 +19,7 @@ class StorageService {
     final targetPath = '${dir.absolute.path}/$_imagePath';
 
     final compressedImage = await FlutterImageCompress.compressAndGetFile(
-      image.absolute.path, targetPath, minHeight: 240, minWidth: 320
+      image.absolute.path, targetPath, minHeight: 480, minWidth: 640, // minHeight: 240, minWidth: 320
     );
 
     final taskSnapshot = await _firebaseStorage.ref()

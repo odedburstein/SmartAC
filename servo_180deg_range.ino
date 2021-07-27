@@ -1,12 +1,7 @@
-/* HC-05 interfacing with NodeMCU ESP8266
-    Author: Circuit Digest(circuitdigest.com)
-*/
 #include <SoftwareSerial.h>
 #include "Servo.h"
 
-//Servo servo_360;
 Servo servo_180;
-//int servo_360_pin = D1;  // for ESP8266 360 microcontroller
 int servo_180_pin = D2;  // for ESP8266 180 microcontroller
 
 int hc05_rx = D4;
